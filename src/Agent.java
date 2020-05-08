@@ -4,9 +4,9 @@ class Agent {
     private static int agentX = 0, agentY = 0;
     private static int score;
     private static String facing = "right";
+    private static boolean arrowUsed = false;
 
     static void play(Slot[][] board, KnowledgeBase[][] knowledge){
-
         displayBoard(board);
 
         while (!board[agentY][agentX].gold && !board[agentY][agentX].wumpus && !board[agentY][agentX].pit) {
@@ -19,6 +19,7 @@ class Agent {
                    knowledge[agentY][agentX].breeze = true;
                }else if(board[agentY][agentX+1].wumpus){
                    knowledge[agentY][agentX].stink = true;
+                   locateAndKillWumpus(board, knowledge);
                }
             }
             if (agentY < 3){
@@ -26,6 +27,7 @@ class Agent {
                     knowledge[agentY][agentX].breeze = true;
                 }else if(board[agentY+1][agentX].wumpus){
                     knowledge[agentY][agentX].stink = true;
+                    locateAndKillWumpus(board, knowledge);
                 }
             }
             if (agentX > 0){
@@ -33,6 +35,7 @@ class Agent {
                     knowledge[agentY][agentX].breeze = true;
                 }else if(board[agentY][agentX-1].wumpus){
                     knowledge[agentY][agentX].stink = true;
+                    locateAndKillWumpus(board, knowledge);
                 }
             }
             if (agentY > 0){
@@ -40,6 +43,7 @@ class Agent {
                     knowledge[agentY][agentX].breeze = true;
                 }else if(board[agentY-1][agentX].wumpus){
                     knowledge[agentY][agentX].stink = true;
+                    locateAndKillWumpus(board, knowledge);
                 }
             }
             if(!knowledge[agentY][agentX].stink && !knowledge[agentY][agentX].breeze){
@@ -82,16 +86,13 @@ class Agent {
                         if (agentX < 3 && knowledge[agentY][agentX + 1].okay) {
                             safeSpaces[safeIndex] = "move right";
                             safeIndex += 1;
-                        }
-                        if (agentX > 0 && knowledge[agentY][agentX - 1].okay) {
+                        }if (agentX > 0 && knowledge[agentY][agentX - 1].okay) {
                             safeSpaces[safeIndex] = "move left";
                             safeIndex += 1;
-                        }
-                        if (agentY < 3 && knowledge[agentY + 1][agentX].okay) {
+                        }if (agentY < 3 && knowledge[agentY + 1][agentX].okay) {
                             safeSpaces[safeIndex] = "move down";
                             safeIndex += 1;
-                        }
-                        if (agentY > 0 && knowledge[agentY - 1][agentX].okay) {
+                        }if (agentY > 0 && knowledge[agentY - 1][agentX].okay) {
                             safeSpaces[safeIndex] = "move up";
                         }
                         int move = rand.nextInt(safeCount);
@@ -114,11 +115,8 @@ class Agent {
             }
             displayKnowledge(knowledge);
         }
-        if(board[agentY][agentX].gold){
-            score += 1000;
-        }else if(board[agentY][agentX].wumpus || board[agentY][agentX].pit){
-            score -= 1000;
-        }
+        score += board[agentY][agentX].gold ? 1000 : 0;
+        score -= board[agentY][agentX].wumpus || board[agentY][agentX].pit? 1000 : 0;
         System.out.println("Your final score is "+ score);
     }
 
@@ -193,7 +191,6 @@ class Agent {
     }
 
     private static void moveRight(){
-        System.out.println(facing);
         if(facing.equals("left")){
             score -= 2;
         }if(facing.equals("up") || facing.equals("down")){
@@ -238,5 +235,59 @@ class Agent {
         facing = "down";
         agentY += 1;
         score -= 1;
+    }
+
+    private static void locateAndKillWumpus(Slot[][] board, KnowledgeBase[][] knowledge){
+        for(int i = 0; i < knowledge.length; i++){
+            for(int j = 0; j < knowledge[0].length; j++){
+                if((i != agentY || j != agentX) && knowledge[i][j].stink){
+                    int wumpusY, wumpusX;
+                    //at least one other stink, that is enough to find the wumpus
+                    if(agentY == i){
+                        wumpusY = agentY;
+                        wumpusX = (j + agentX)/2;
+                    }else if(agentX == j){
+                        wumpusX = agentX;
+                        wumpusY = (i + agentY)/2;
+                    }else{
+                        if(knowledge[i][agentX].okay){
+                            wumpusX = j;
+                            wumpusY = agentY;
+                        }else{
+                            wumpusX = agentX;
+                            wumpusY = i;
+                        }
+                    }
+                    //reposition to shoot
+                    if(wumpusX == agentX+1){
+                        score -= facing.equals("left")? 2 : 0;
+                        score -= facing.equals("up") || facing.equals("down")? 1 : 0;
+                        facing = "right";
+                        score -= 10;
+                    }else if(wumpusX == agentX-1){
+                        score -= facing.equals("right")? 2 : 0;
+                        score -= facing.equals("up") || facing.equals("down")? 1 : 0;
+                        facing = "left";
+                        score -= 10;
+                    }else if(wumpusY == agentY+1){
+                        score -= facing.equals("up")? 2 : 0;
+                        score -= facing.equals("left") || facing.equals("right")? 1 : 0;
+                        facing = "down";
+                        score -= 10;
+                    }else if(wumpusY == agentY-1){
+                        score -= facing.equals("down")? 2 : 0;
+                        score -= facing.equals("left") || facing.equals("right")? 1 : 0;
+                        facing = "up";
+                        score -= 10;
+                    }
+                    //kill the wumpus
+                    if(!arrowUsed){
+                        arrowUsed = true;
+                        board[wumpusY][wumpusX].wumpus = false;
+                    }
+                }
+            }
+        }
+        displayBoard(board);
     }
 }
