@@ -30,7 +30,7 @@ public class Initializer {
         while(!wumpusSet){
             int i = rand.nextInt(4);
             int j = rand.nextInt(4);
-            if (board[i][j].wumpus == false && (i != 0 || j != 0)){
+            if (board[i][j].pit == false && board[i][j].glitter == false && (i != 0 || j != 0)){
                 board[i][j].wumpus = true;
                 wumpusSet = true;
             }

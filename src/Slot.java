@@ -5,6 +5,7 @@ public class Slot {
     boolean glitter = false;
     boolean wumpus = false;
     boolean pit = false;
+    boolean visited = false;
 
     public String toString(){
         String slotString = " ";
@@ -14,6 +15,7 @@ public class Slot {
         slotString += glitter? "G" : " ";
         slotString += wumpus? "W" : " ";
         slotString += pit? "P" : " ";
+        slotString += visited? "V" : " ";
         slotString += " ";
         return slotString;
     }
