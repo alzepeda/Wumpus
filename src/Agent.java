@@ -68,7 +68,7 @@ public class Agent {
                 moveUp();
             }else{
                 Random rand = new Random();
-                //sometimes you must take unsafe route
+                //necessary to get out of loops when all adjacent cells are unsafe
                 int goToSafe = rand.nextInt(9);
                 if(goToSafe < 8){
                     int safeCount = 0;
@@ -104,37 +104,11 @@ public class Agent {
                         } else if (safeSpaces[move].equals("move down")) {
                             moveDown();
                         }
+                    }else{
+                        randomMove(board);
                     }
                 }else{
-                    boolean moveDecided = false;
-                    while(!moveDecided) {
-                        int move = rand.nextInt(3);
-                        switch(move){
-                            case 0: if(agentX < 3){
-                                moveRight();
-                                displayBoard(board);
-                                moveDecided = true;
-                            }
-                                break;
-                            case 1: if(agentY < 3){
-                                moveDown();
-                                displayBoard(board);
-                                moveDecided = true;
-                            }
-                                break;
-                            case 2: if(agentX > 0){
-                                moveLeft();
-                                displayBoard(board);
-                                moveDecided = true;
-                            }
-                                break;
-                            case 3: if(agentY > 0){
-                                moveUp();
-                                displayBoard(board);
-                                moveDecided = true;
-                            }
-                        }
-                    }
+                    randomMove(board);
                 }
             }
             displayBoard(board);
@@ -171,7 +145,38 @@ public class Agent {
         }
     }
 
-    public static void randomMove(){
+    public static void randomMove(Slot[][] board){
+        Random rand = new Random();
+        boolean moveDecided = false;
+        while(!moveDecided) {
+            int move = rand.nextInt(3);
+            switch(move){
+                case 0: if(agentX < 3){
+                    moveRight();
+                    displayBoard(board);
+                    moveDecided = true;
+                }
+                    break;
+                case 1: if(agentY < 3){
+                    moveDown();
+                    displayBoard(board);
+                    moveDecided = true;
+                }
+                    break;
+                case 2: if(agentX > 0){
+                    moveLeft();
+                    displayBoard(board);
+                    moveDecided = true;
+                }
+                    break;
+                case 3: if(agentY > 0){
+                    moveUp();
+                    displayBoard(board);
+                    moveDecided = true;
+                }
+            }
+        }
+        /*
         Random rand = new Random();
         int action = rand.nextInt(3);
 
@@ -220,6 +225,7 @@ public class Agent {
             default:
                 throw new IllegalStateException("Unexpected value: " + action);
         }
+         */
     }
 
     public static void moveRight(){
