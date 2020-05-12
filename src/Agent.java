@@ -1,189 +1,95 @@
 import java.util.Random;
 
 class Agent {
-    private static int agentX = 0, agentY = 0;
-    private static int score;
-    private static String facing = "right";
-    private static boolean arrowUsed = false;
 
-    static void play(Slot[][] board, KnowledgeBase[][] knowledge){
-        displayBoard(board);
+    static KnowledgeBase knowledgeBase = new KnowledgeBase();
 
-        while (!board[agentY][agentX].gold && !board[agentY][agentX].wumpus && !board[agentY][agentX].pit) {
-            System.out.println("score: " + score);
-            //perceptions made, is it stinky or breezy?
-            knowledge[agentY][agentX].okay = true;
-            knowledge[agentY][agentX].visited = true;
-            if (agentX < 3){
-               if(board[agentY][agentX+1].pit) {
-                   knowledge[agentY][agentX].breeze = true;
-               }else if(board[agentY][agentX+1].wumpus){
-                   knowledge[agentY][agentX].stink = true;
-                   locateAndKillWumpus(board, knowledge);
-               }
+    public static void makeMove(){
+        if(!knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX].stink
+                && !knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX].breeze){
+            if(KnowledgeBase.agentX < 3){
+                knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX+1].okay = true;
             }
-            if (agentY < 3){
-                if(board[agentY+1][agentX].pit) {
-                    knowledge[agentY][agentX].breeze = true;
-                }else if(board[agentY+1][agentX].wumpus){
-                    knowledge[agentY][agentX].stink = true;
-                    locateAndKillWumpus(board, knowledge);
-                }
+            if(KnowledgeBase.agentY < 3){
+                knowledgeBase.knowledgeBoard[KnowledgeBase.agentY+1][KnowledgeBase.agentX].okay = true;
             }
-            if (agentX > 0){
-                if(board[agentY][agentX-1].pit) {
-                    knowledge[agentY][agentX].breeze = true;
-                }else if(board[agentY][agentX-1].wumpus){
-                    knowledge[agentY][agentX].stink = true;
-                    locateAndKillWumpus(board, knowledge);
-                }
+            if(KnowledgeBase.agentX > 0){
+                knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX-1].okay = true;
             }
-            if (agentY > 0){
-                if(board[agentY-1][agentX].pit) {
-                    knowledge[agentY][agentX].breeze = true;
-                }else if(board[agentY-1][agentX].wumpus){
-                    knowledge[agentY][agentX].stink = true;
-                    locateAndKillWumpus(board, knowledge);
-                }
+            if(KnowledgeBase.agentY > 0){
+                knowledgeBase.knowledgeBoard[KnowledgeBase.agentY-1][KnowledgeBase.agentX].okay = true;
             }
-            if(!knowledge[agentY][agentX].stink && !knowledge[agentY][agentX].breeze){
-                if(agentX<3){
-                    knowledge[agentY][agentX+1].okay = true;
-                }
-                if(agentY<3){
-                    knowledge[agentY+1][agentX].okay = true;
-                }
-                if(agentX>0){
-                    knowledge[agentY][agentX-1].okay = true;
-                }
-                if(agentY>0){
-                    knowledge[agentY-1][agentX].okay = true;
-                }
-            }
-
-            //check if there exists neighboring cell which is safe and not visited
-            if(agentX < 3 && knowledge[agentY][agentX+1].okay && !knowledge[agentY][agentX+1].visited){
-                moveRight();
-            }else if(agentY < 3 && knowledge[agentY+1][agentX].okay && !knowledge[agentY+1][agentX].visited){
-                moveDown();
-            }else if(agentX > 0 && knowledge[agentY][agentX-1].okay && !knowledge[agentY][agentX-1].visited){
-                moveLeft();
-            }else if(agentY > 0 && knowledge[agentY-1][agentX].okay && !knowledge[agentY-1][agentX].visited){
-                moveUp();
-            }else{
-                Random rand = new Random();
-                //necessary to get out of loops when all adjacent cells are unsafe
-                int goToSafe = rand.nextInt(9);
-                if(goToSafe < 8){
-                    int safeCount = 0;
-                    safeCount += agentX < 3 && knowledge[agentY][agentX+1].okay? 1 : 0;
-                    safeCount += agentX > 0 && knowledge[agentY][agentX-1].okay? 1 : 0;
-                    safeCount += agentY < 3 && knowledge[agentY+1][agentX].okay? 1 : 0;
-                    safeCount += agentY > 0 && knowledge[agentY-1][agentX].okay? 1 : 0;
-                    if(safeCount > 0) {
-                        String[] safeSpaces = new String[safeCount];
-                        int safeIndex = 0;
-                        if (agentX < 3 && knowledge[agentY][agentX + 1].okay) {
-                            safeSpaces[safeIndex] = "move right";
-                            safeIndex += 1;
-                        }if (agentX > 0 && knowledge[agentY][agentX - 1].okay) {
-                            safeSpaces[safeIndex] = "move left";
-                            safeIndex += 1;
-                        }if (agentY < 3 && knowledge[agentY + 1][agentX].okay) {
-                            safeSpaces[safeIndex] = "move down";
-                            safeIndex += 1;
-                        }if (agentY > 0 && knowledge[agentY - 1][agentX].okay) {
-                            safeSpaces[safeIndex] = "move up";
-                        }
-                        int move = rand.nextInt(safeCount);
-                        switch(safeSpaces[move]){
-                            case("move right"): moveRight();
-                                break;
-                            case("move left"): moveLeft();
-                                break;
-                            case("move up"): moveUp();
-                                break;
-                            case("move down"): moveDown();
-                                break;
-                        }
-                    }else{
-                        randomMove(knowledge);
-                    }
-                }else{
-                    randomMove(knowledge);
-                }
-            }
-            displayKnowledge(knowledge);
         }
-        score += board[agentY][agentX].gold ? 1000 : 0;
-        score -= board[agentY][agentX].wumpus || board[agentY][agentX].pit? 1000 : 0;
-        System.out.println("Your final score is "+ score);
+        if(KnowledgeBase.agentX < 3 && knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX+1].okay
+                && !knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX+1].visited){
+            moveRight();
+        }else if(KnowledgeBase.agentY < 3 && knowledgeBase.knowledgeBoard[KnowledgeBase.agentY+1][KnowledgeBase.agentX].okay
+                && !knowledgeBase.knowledgeBoard[KnowledgeBase.agentY+1][KnowledgeBase.agentX].visited){
+            moveDown();
+        }else if(KnowledgeBase.agentX > 0 && knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX-1].okay
+                && !knowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX-1].visited){
+            moveLeft();
+        }else if(KnowledgeBase.agentY > 0 && knowledgeBase.knowledgeBoard[KnowledgeBase.agentY-1][KnowledgeBase.agentX].okay
+                && !knowledgeBase.knowledgeBoard[KnowledgeBase.agentY-1][KnowledgeBase.agentX].visited){
+            moveUp();
+        }else{
+            safeMove();
+        }
+
+        displayKnowledge();
     }
 
-    private static void displayKnowledge(KnowledgeBase[][] knowledge){
-        System.out.println("-----------------------------");
-        for(int i = 0; i < knowledge.length; i++){
+    public static void displayKnowledge(){
+        System.out.println("-----------------------------------------");
+        for(int i = 0; i < knowledgeBase.knowledgeBoard.length; i++){
             System.out.print("|");
-            for(int j = 0; j < knowledge[i].length; j++){
-                if(i == agentY && agentX == j){
-                    if(facing.equals("left")){
+            for(int j = 0; j < knowledgeBase.knowledgeBoard[i].length; j++){
+                if(i == KnowledgeBase.agentY && KnowledgeBase.agentX == j){
+                    if(KnowledgeBase.facing.equals("left")){
                         System.out.print("<");
-                    }if(facing.equals("right")){
+                    }if(KnowledgeBase.facing.equals("right")){
                         System.out.print(">");
-                    }if(facing.equals("up")){
+                    }if(KnowledgeBase.facing.equals("up")){
                         System.out.print("^");
-                    }if(facing.equals("down")){
-                        System.out.print(".");
+                    }if(KnowledgeBase.facing.equals("down")){
+                        System.out.print("v");
                     }
                 }
-                System.out.print(knowledge[i][j]);
+                System.out.print(knowledgeBase.knowledgeBoard[i][j]);
                 System.out.print("|");
             }
             System.out.println();
-            System.out.println("-----------------------------");
+            System.out.println("-----------------------------------------");
         }
     }
 
-    private static void displayBoard(Slot[][] board){
-        System.out.println("-------------------------");
-        for(int i = 0; i < board.length; i++){
-            System.out.print("|");
-            for(int j = 0; j < board[i].length; j++){
-                System.out.print(board[i][j]);
-                System.out.print("|");
-            }
-            System.out.println();
-            System.out.println("--------------------------");
-        }
-    }
-
-    private static void randomMove(KnowledgeBase[][] knowledge){
+    public static void randomMove(){
         Random rand = new Random();
         boolean moveDecided = false;
         while(!moveDecided) {
             int move = rand.nextInt(3);
             switch(move){
-                case 0: if(agentX < 3){
+                case 0: if(KnowledgeBase.agentX < 3){
                     moveRight();
-                    displayKnowledge(knowledge);
+                    displayKnowledge();
                     moveDecided = true;
                 }
                     break;
-                case 1: if(agentY < 3){
+                case 1: if(KnowledgeBase.agentY < 3){
                     moveDown();
-                    displayKnowledge(knowledge);
+                    displayKnowledge();
                     moveDecided = true;
                 }
                     break;
-                case 2: if(agentX > 0){
+                case 2: if(KnowledgeBase.agentX > 0){
                     moveLeft();
-                    displayKnowledge(knowledge);
+                    displayKnowledge();
                     moveDecided = true;
                 }
                     break;
-                case 3: if(agentY > 0){
+                case 3: if(KnowledgeBase.agentY > 0){
                     moveUp();
-                    displayKnowledge(knowledge);
+                    displayKnowledge();
                     moveDecided = true;
                 }
             }
@@ -191,103 +97,149 @@ class Agent {
     }
 
     private static void moveRight(){
-        if(facing.equals("left")){
-            score -= 2;
-        }if(facing.equals("up") || facing.equals("down")){
-            score -= 1;
+        if(knowledgeBase.facing.equals("left")){
+            knowledgeBase.score -= 2;
+        }if(KnowledgeBase.facing.equals("up") || KnowledgeBase.facing.equals("down")){
+            knowledgeBase.score -= 1;
         }
-        facing = "right";
-        agentX += 1;
-        score -= 1;
+        knowledgeBase.facing = "right";
+        knowledgeBase.agentX += 1;
+        knowledgeBase.score -= 1;
     }
 
     private static void moveLeft(){
-        System.out.println(facing);
-        if(facing.equals("right")){
-            score -= 2;
-        }if(facing.equals("up") || facing.equals("down")){
-            score -= 1;
+        if(KnowledgeBase.facing.equals("right")){
+            knowledgeBase.score -= 2;
+        }if(KnowledgeBase.facing.equals("up") || KnowledgeBase.facing.equals("down")){
+            knowledgeBase.score -= 1;
         }
-        facing = "left";
-        agentX -= 1;
-        score -= 1;
+        knowledgeBase.facing = "left";
+        knowledgeBase.agentX -= 1;
+        knowledgeBase.score -= 1;
     }
 
     private static void moveUp(){
-        System.out.println(facing);
-        if(facing.equals("down")){
-            score -= 2;
-        }if(facing.equals("left") || facing.equals("right")){
-            score -= 1;
+        if(KnowledgeBase.facing.equals("down")){
+            knowledgeBase.score -= 2;
+        }if(KnowledgeBase.facing.equals("left") || KnowledgeBase.facing.equals("right")){
+            knowledgeBase.score -= 1;
         }
-        facing = "up";
-        agentY -= 1;
-        score -= 1;
+        knowledgeBase.facing = "up";
+        knowledgeBase.agentY -= 1;
+        knowledgeBase.score -= 1;
     }
 
     private static void moveDown(){
-        System.out.println(facing);
-        if(facing.equals("up")){
-            score -= 2;
-        }if(facing.equals("left") || facing.equals("right")){
-            score -= 1;
+        if(knowledgeBase.facing.equals("up")){
+            knowledgeBase.score -= 2;
+        }if(KnowledgeBase.facing.equals("left") || KnowledgeBase.facing.equals("right")){
+            knowledgeBase.score -= 1;
         }
-        facing = "down";
-        agentY += 1;
-        score -= 1;
+        knowledgeBase.facing = "down";
+        knowledgeBase.agentY += 1;
+        knowledgeBase.score -= 1;
     }
 
-    private static void locateAndKillWumpus(Slot[][] board, KnowledgeBase[][] knowledge){
-        for(int i = 0; i < knowledge.length; i++){
-            for(int j = 0; j < knowledge[0].length; j++){
-                if((i != agentY || j != agentX) && knowledge[i][j].stink){
+    public static void locateAndKillWumpus(){
+        for(int i = 0; i < knowledgeBase.knowledgeBoard.length; i++){
+            for(int j = 0; j < knowledgeBase.knowledgeBoard[0].length; j++){
+                if((i != KnowledgeBase.agentY || j != KnowledgeBase.agentX) && knowledgeBase.knowledgeBoard[i][j].stink){
                     int wumpusY, wumpusX;
                     //at least one other stink, that is enough to find the wumpus
-                    if(agentY == i){
-                        wumpusY = agentY;
-                        wumpusX = (j + agentX)/2;
-                    }else if(agentX == j){
-                        wumpusX = agentX;
-                        wumpusY = (i + agentY)/2;
+                    if(KnowledgeBase.agentY == i){
+                        wumpusY = KnowledgeBase.agentY;
+                        wumpusX = (j + KnowledgeBase.agentX)/2;
+                    }else if(KnowledgeBase.agentX == j){
+                        wumpusX = KnowledgeBase.agentX;
+                        wumpusY = (i + KnowledgeBase.agentY)/2;
                     }else{
-                        if(knowledge[i][agentX].okay){
+                        if(knowledgeBase.knowledgeBoard[i][KnowledgeBase.agentX].okay){
                             wumpusX = j;
-                            wumpusY = agentY;
+                            wumpusY = KnowledgeBase.agentY;
                         }else{
-                            wumpusX = agentX;
+                            wumpusX = KnowledgeBase.agentX;
                             wumpusY = i;
                         }
                     }
                     //reposition to shoot
-                    if(wumpusX == agentX+1){
-                        score -= facing.equals("left")? 2 : 0;
-                        score -= facing.equals("up") || facing.equals("down")? 1 : 0;
-                        facing = "right";
-                        score -= 10;
-                    }else if(wumpusX == agentX-1){
-                        score -= facing.equals("right")? 2 : 0;
-                        score -= facing.equals("up") || facing.equals("down")? 1 : 0;
-                        facing = "left";
-                        score -= 10;
-                    }else if(wumpusY == agentY+1){
-                        score -= facing.equals("up")? 2 : 0;
-                        score -= facing.equals("left") || facing.equals("right")? 1 : 0;
-                        facing = "down";
-                        score -= 10;
-                    }else if(wumpusY == agentY-1){
-                        score -= facing.equals("down")? 2 : 0;
-                        score -= facing.equals("left") || facing.equals("right")? 1 : 0;
-                        facing = "up";
-                        score -= 10;
+                    if(wumpusX == KnowledgeBase.agentX+1){
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("left")? 2 : 0;
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("up") || KnowledgeBase.facing.equals("down")? 1 : 0;
+                        KnowledgeBase.facing = "right";
+                        KnowledgeBase.score -= 10;
+                    }else if(wumpusX == KnowledgeBase.agentX-1){
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("right")? 2 : 0;
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("up") || KnowledgeBase.facing.equals("down")? 1 : 0;
+                        KnowledgeBase.facing = "left";
+                        KnowledgeBase.score -= 10;
+                    }else if(wumpusY == KnowledgeBase.agentY+1){
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("up")? 2 : 0;
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("left") || KnowledgeBase.facing.equals("right")? 1 : 0;
+                        KnowledgeBase.facing = "down";
+                        KnowledgeBase.score -= 10;
+                    }else if(wumpusY == KnowledgeBase.agentY-1){
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("down")? 2 : 0;
+                        KnowledgeBase.score -= KnowledgeBase.facing.equals("left") || KnowledgeBase.facing.equals("right")? 1 : 0;
+                        KnowledgeBase.facing = "up";
+                        KnowledgeBase.score -= 10;
                     }
                     //kill the wumpus
-                    if(!arrowUsed){
-                        arrowUsed = true;
-                        board[wumpusY][wumpusX].wumpus = false;
+                    if(!KnowledgeBase.arrowUsed){
+                        KnowledgeBase.arrowUsed = true;
+                        Initializer.wumpusDead = true;
+                    }
+                    //if there is a scream, we can remove all warnings for the wumpus
+                    if(KnowledgeBase.scream){
+                        for(int k = 0; k < KnowledgeBase.knowledgeBoard.length; k++){
+                            for(int l = 0; l < KnowledgeBase.knowledgeBoard[0].length; l++){
+                                KnowledgeBase.knowledgeBoard[i][j].stink = false;
+                            }
+                        }
                     }
                 }
             }
         }
-        displayBoard(board);
+    }
+
+    public static void safeMove(){
+        Random rand = new Random();
+        int safeCount = 0;
+        safeCount += KnowledgeBase.agentX < 3
+                && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX+1].okay? 1 : 0;
+        safeCount += KnowledgeBase.agentX > 0
+                && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX-1].okay? 1 : 0;
+        safeCount += KnowledgeBase.agentY < 3
+                && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY+1][KnowledgeBase.agentX].okay? 1 : 0;
+        safeCount += KnowledgeBase.agentY > 0
+                && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY-1][KnowledgeBase.agentX].okay? 1 : 0;
+        if(safeCount > 0) {
+            String[] safeSpaces = new String[safeCount];
+            int safeIndex = 0;
+            if (KnowledgeBase.agentX < 3 && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX + 1].okay) {
+                safeSpaces[safeIndex] = "move right";
+                safeIndex += 1;
+            }if (KnowledgeBase.agentX > 0 && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY][KnowledgeBase.agentX - 1].okay) {
+                safeSpaces[safeIndex] = "move left";
+                safeIndex += 1;
+            }if (KnowledgeBase.agentY < 3 && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY + 1][KnowledgeBase.agentX].okay) {
+                safeSpaces[safeIndex] = "move down";
+                safeIndex += 1;
+            }if (KnowledgeBase.agentY > 0 && KnowledgeBase.knowledgeBoard[KnowledgeBase.agentY - 1][KnowledgeBase.agentX].okay) {
+                safeSpaces[safeIndex] = "move up";
+            }
+            int move = rand.nextInt(safeCount);
+            switch(safeSpaces[move]){
+                case("move right"): moveRight();
+                    break;
+                case("move left"): moveLeft();
+                    break;
+                case("move up"): moveUp();
+                    break;
+                case("move down"): moveDown();
+                    break;
+            }
+        }else{
+            KnowledgeBase.noSafeMoves = true;
+        }
     }
 }
